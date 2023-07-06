@@ -11,8 +11,11 @@ from check_for_cluster import check_cluster
 
 table_name = 'links_small'
 postgresurl = Variable.get('postgresurl')
+username = Variable.get('postgres_username')
+password = Variable.get('postgres_password')
 aws_access_key_id = Variable.get('aws_access_key_id')
 aws_secret_access_key = Variable.get('aws_secret_access_key')
+s3_bucket = Variable.get('s3_bucket')
 
 default_args = {
     "owner": "Tomiwa",
@@ -37,13 +40,13 @@ SPARK_STEPS = [
             'Jar': 'command-runner.jar',
             'Args': ['spark-submit', '--deploy-mode', 'cluster', '--master', 'yarn',
                      '--class', 'org.apache.spark.deploy.SparkSubmit', '--jars',
-                     's3://emr-prep-data-lake/postgresql-42.6.0.jar',
-                     's3://emr-prep-data-lake/postgresToS3.py',
+                     f's3://{s3_bucket}/postgresql-42.6.0.jar',
+                     f's3://{s3_bucket}/postgresToS3.py',
                      '--postgresurl', {postgresurl},
                      '--table_name', {table_name},
-                     '--database_username', 'postgres',
-                     '--database_password', 'postgres',
-                     '--s3_output_path', 's3://emr-prep-data-lake/'
+                     '--database_username', {username},
+                     '--database_password', {password},
+                     '--s3_output_path', f's3://{s3_bucket}/'
 
                      ]
             }
@@ -57,13 +60,13 @@ dag = DAG(
     schedule_interval=schedule_interval,
     start_date=days_ago(1),
     catchup=False,
-    tags=tags ,render_template_as_native_obj=True
+    tags=tags #,render_template_as_native_obj=True
 )
 
 def _get_cluster_id(ti):
     cluster_id = ti.xcom_pull(task_ids="get_cluster_id")
     if cluster_id == "No cluster":
-        return "create_job_flow" #create_job_flow
+        return "create_job_flow"
     return "step_adder"
 
 
