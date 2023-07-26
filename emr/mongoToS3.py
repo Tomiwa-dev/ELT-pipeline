@@ -2,7 +2,6 @@ from pyspark.sql import SparkSession
 import argparse
 from datetime import datetime
 
-print("connecting to database")
 
 def getArgs():
     parser = argparse.ArgumentParser(description='spark command line arguments')
@@ -29,6 +28,17 @@ def readFromMongo(spark, mongouri, database, collection):
 
     return dataframe
 
+def writeTos3(dataframe, s3_output_path, partition_by):
+    bucket_name = f"{s3_output_path}/{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    print(f"writing to s3 bucket {bucket_name}")
+    if partition_by == None:
+        dataframe.write.parquet(bucket_name, mode= "overwrite")
+
+    else:
+        dataframe.write.partitionBy(partition_by).parquet(bucket_name, mode="overwrite")
+
+    print("DONE!!!!!!!")
+
 args = getArgs()
 
 
@@ -45,6 +55,6 @@ spark.sparkContext.setLogLevel("ERROR")
 
 df = readFromMongo(spark, mongouri, database, collection)
 
-# writeTos3(df, s3_output_path, partition_by)
+writeTos3(df, s3_output_path, partition_by)
 
 spark.stop()
