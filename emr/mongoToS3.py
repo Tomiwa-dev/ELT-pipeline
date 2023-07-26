@@ -17,7 +17,7 @@ def getArgs():
 
 def readFromMongo(spark, mongouri, database, collection):
     print("reading from mongo")
-    dataframe = (spark.read.format("mongodb")
+    dataframe = (spark.read.format("com.mongodb.spark.sql.DefaultSource")
                  .option("uri", mongouri).option("database", database).option("collection", collection)
                  # .option("readPreference.name", "primaryPreferred")
                  .option("inferSchema", "true")
@@ -37,7 +37,10 @@ database = args.database
 collection = args.collection
 
 print("Spark Connection starting")
-spark = SparkSession.builder.appName(f"MONGO_S3_{collection}_{datetime.now().strftime('%Y%m%d%H%M%S')}").getOrCreate()
+spark = (SparkSession.builder
+         .appName(f"MONGO_S3_{collection}_{datetime.now().strftime('%Y%m%d%H%M%S')}")
+         .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:3.0.1")
+         .getOrCreate())
 spark.sparkContext.setLogLevel("ERROR")
 
 df = readFromMongo(spark, mongouri, database, collection)
