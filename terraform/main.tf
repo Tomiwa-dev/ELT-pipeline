@@ -252,3 +252,7 @@ resource "aws_iam_role_policy" "iam_emr_profile_policy" {
   role   = aws_iam_role.iam_emr_profile_role.id
   policy = data.aws_iam_policy_document.iam_emr_profile_policy.json
 }
+
+resource "aws_s3_bucket" "delta-lake" {
+  bucket = "delta-lake"
+}
