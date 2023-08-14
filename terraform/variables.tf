@@ -28,3 +28,10 @@ variable "aws_region" {
   default = "eu-west-1"
   type = string
 }
+
+variable "aws_key_name" {
+  description = "ec2 pem key to ssh into emr cluster"
+  type = string
+  sensitive = true
+
+}
