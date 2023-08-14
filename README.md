@@ -24,3 +24,5 @@ terraform folder.
 
 If you want to access a mongo database 
 `spark-shell --conf "spark.jars.packages=org.mongodb.spark:mongo-spark-connector_2.12:3.0.1" --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"`
+
+- To access the trino-cli run `trino-cli --catalog delta`
