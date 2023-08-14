@@ -75,18 +75,27 @@ resource "aws_db_instance" "default" {
 
 }
 
+data "template_file" "emr_configurations" {
+  template = file("configuration.json")
+}
+
 resource "aws_emr_cluster" "cluster_1" {
   name          = "cluster_1"
   release_label = "emr-6.12.0"
   service_role = aws_iam_role.iam_emr_service_role.arn
-  applications  = ["Spark", "Trino", "Zeppelin", "Hadoop"]
+  applications  = ["Spark", "Trino", "Zeppelin"]
   termination_protection = false
-    ec2_attributes {
+  auto_termination_policy {idle_timeout = 3600}
+  ec2_attributes {
     subnet_id                         = aws_default_subnet.emr_subnet.id
     emr_managed_master_security_group = aws_security_group.emr.id
     emr_managed_slave_security_group  = aws_security_group.emr.id
     instance_profile                  = aws_iam_instance_profile.emr_profile.arn
+    key_name = var.aws_key_name
+
   }
+
+  configurations = data.template_file.emr_configurations.rendered
 
   master_instance_group {
     instance_type = "m5.xlarge"
@@ -207,6 +216,7 @@ data "aws_iam_policy_document" "ec2_assume_role" {
 resource "aws_iam_role" "iam_emr_profile_role" {
   name               = "iam_emr_profile_role"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
@@ -241,6 +251,7 @@ data "aws_iam_policy_document" "iam_emr_profile_policy" {
       "sdb:*",
       "sns:*",
       "sqs:*",
+      "glue:*"
     ]
 
     resources = ["*"]
@@ -253,6 +264,7 @@ resource "aws_iam_role_policy" "iam_emr_profile_policy" {
   policy = data.aws_iam_policy_document.iam_emr_profile_policy.json
 }
 
-resource "aws_s3_bucket" "delta-lake" {
-  bucket = "delta-lake"
-}
+#resource "aws_s3_bucket" "imdb_data_delta_lake" {
+#  bucket = "imdb_data_delta_lake_11"
+#}
+
