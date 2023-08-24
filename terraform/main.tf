@@ -177,9 +177,7 @@ data "aws_iam_policy_document" "iam_emr_service_policy" {
       "iam:ListInstanceProfiles",
       "iam:ListRolePolicies",
       "iam:PassRole",
-      "s3:CreateBucket",
-      "s3:Get*",
-      "s3:List*",
+      "s3:*",
       "sdb:BatchPutAttributes",
       "sdb:Select",
       "sqs:CreateQueue",
@@ -267,4 +265,3 @@ resource "aws_iam_role_policy" "iam_emr_profile_policy" {
 #resource "aws_s3_bucket" "imdb_data_delta_lake" {
 #  bucket = "imdb_data_delta_lake_11"
 #}
-
