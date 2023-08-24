@@ -71,5 +71,3 @@ df = read_from_postgres(spark, postgresurl, table_name, database_username, datab
 write_to_s3(df, s3_output_path, partition_by, table_name)
 
 spark.stop()
-
-spark-submit --deploy-mode cluster --master yarn --class org.apache.spark.deploy.SparkSubmit s3://emr-prep-data-lake/mongo_to_s3_full_load.py --mongouri mongodb+srv://tomiwa-dev:DmFeuba92dcX2cPv@cluster0.t5mqmz2.mongodb.net/ --database movies --collection links --s3_output_path s3://emr-prep-data-lake/bronze/
