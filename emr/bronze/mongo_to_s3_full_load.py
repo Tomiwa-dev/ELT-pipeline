@@ -72,6 +72,3 @@ df = read_from_mongo(spark, mongouri, database, collection)
 write_to_s3(df, s3_output_path, partition_by, collection)
 
 spark.stop()
-
-
-# spark-submit --master yarn --packages org.mongodb.spark:mongo-spark-connector_2.12:3.0.1 mongo_full_load.py --mongouri mongodb+srv://tomiwa-dev:DmFeuba92dcX2cPv@cluster0.t5mqmz2.mongodb.net/ --database movies --collection transaction_part --s3_outout_path s3://emr-prep-data-lake/bronze/
