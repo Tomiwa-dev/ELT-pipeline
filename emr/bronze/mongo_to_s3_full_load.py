@@ -10,7 +10,6 @@ def get_args():
     parser.add_argument('--database', type=str, required=True, help="mongo source table")
     parser.add_argument('--collection', type=str, required=True, help="database user")
     parser.add_argument('--s3_output_path', type=str, required=True, help="s3 destination")
-    # parser.add_argument('--file_count', type=int, required=False, default=None, help= "Number of files to be generated in s3 bucket")
     parser.add_argument('--partition_by', type=str, required=False, default=None, help= "column used to partition parquet file during write")
     # parser.add_argument('--overwrite_schema', type=bool, required=False, default= False, choices=[True, False])
     # parser.add_argument('--schema', type=str, required=False, default=None, help="to specify columns and data types")
@@ -34,19 +33,18 @@ def read_from_mongo(spark, mongouri, database, collection):
 
 
 def write_to_s3(dataframe, s3_output_path, partition_by, collection):
-    bucket_name = f"{s3_output_path}{collection}"
-    # {datetime.now().strftime('%Y%m%d%H%M%S')}
+    bucket_name = f"{s3_output_path}bronze/{collection}"
     print(f"writing to s3 bucket {bucket_name}")
 
     if partition_by == None:
-        dataframe.write.format("delta").mode('overwrite').saveAsTable(bucket_name)
+        dataframe.write.format("delta").mode('overwrite').save(bucket_name)
 
     else:
-        dataframe.write.format("delta").partitionBy(partition_by).mode('overwrite').saveAsTable(bucket_name)
+        dataframe.write.format("delta").partitionBy(partition_by).mode('overwrite').save(bucket_name)
 
     print("DONE!!!!!!!")
 
-
+print("collecting command line args....")
 args = get_args()
 
 mongouri = args.mongouri
@@ -55,9 +53,9 @@ collection = args.collection
 s3_output_path = args.s3_output_path
 partition_by = args.partition_by
 
-print("Spark Connection starting")
+print("Spark Connection starting...")
 builder = (SparkSession.builder.appName(f"MONGO_S3_BRONZE_{collection}_{datetime.now().strftime('%Y%m%d%H%M%S')}")
-           .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:3.0.1")
+           .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:3.0.2")
            .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
            .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
            .config("hive.metastore.client.factory.class", "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory")

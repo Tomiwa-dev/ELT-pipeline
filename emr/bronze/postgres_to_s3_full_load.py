@@ -32,7 +32,7 @@ def read_from_postgres(spark, postgresurl, table_name, database_username, databa
 
 
 def write_to_s3(dataframe, s3_output_path, partition_by, table_name):
-    bucket_name = f"{s3_output_path}{table_name}"
+    bucket_name = f"{s3_output_path}Bronze/{table_name}"
     print(f"writing to s3 bucket {bucket_name}")
 
     if partition_by is None:
