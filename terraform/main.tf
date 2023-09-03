@@ -83,7 +83,7 @@ resource "aws_emr_cluster" "cluster_1" {
   name          = "cluster_1"
   release_label = "emr-6.12.0"
   service_role = aws_iam_role.iam_emr_service_role.arn
-  applications  = ["Spark", "Trino", "Zeppelin"]
+  applications  = ["Spark", "Trino", "Zeppelin", "JupyterHub", "JupyterEnterpriseGateway", "Hive", "Livy"]
   termination_protection = false
   auto_termination_policy {idle_timeout = 3600}
   ec2_attributes {
@@ -93,6 +93,7 @@ resource "aws_emr_cluster" "cluster_1" {
     instance_profile                  = aws_iam_instance_profile.emr_profile.arn
     key_name = var.aws_key_name
 
+
   }
 
   configurations = data.template_file.emr_configurations.rendered
@@ -101,10 +102,19 @@ resource "aws_emr_cluster" "cluster_1" {
     instance_type = "m5.xlarge"
   }
 
+  bootstrap_action {
+    path = "s3://delta-lake-temp-1111/bootstrap.sh"
+    name = "install libraries"
+  }
+
   core_instance_group {
     instance_type  = "m5.xlarge"
-    instance_count = 2
+    instance_count = 1
+#    bid_price = "0.105"
+
   }
+
+
 
 }
 
@@ -130,6 +140,7 @@ resource "aws_iam_role" "iam_emr_service_role" {
 }
 
 data "aws_iam_policy_document" "iam_emr_service_policy" {
+
   statement {
     effect = "Allow"
 
@@ -140,7 +151,9 @@ data "aws_iam_policy_document" "iam_emr_service_policy" {
       "ec2:CreateNetworkInterface",
       "ec2:CreateSecurityGroup",
       "ec2:CreateTags",
+      "ec2:CreateNetworkInterfacePermission",
       "ec2:DeleteNetworkInterface",
+      "ec2:DeleteNetworkInterfacePermission",
       "ec2:DeleteSecurityGroup",
       "ec2:DeleteTags",
       "ec2:DescribeAvailabilityZones",
@@ -164,6 +177,7 @@ data "aws_iam_policy_document" "iam_emr_service_policy" {
       "ec2:DetachNetworkInterface",
       "ec2:ModifyImageAttribute",
       "ec2:ModifyInstanceAttribute",
+      "ec2:ModifyNetworkInterfaceAttribute",
       "ec2:RequestSpotInstances",
       "ec2:RevokeSecurityGroupEgress",
       "ec2:RunInstances",
@@ -171,6 +185,7 @@ data "aws_iam_policy_document" "iam_emr_service_policy" {
       "ec2:DeleteVolume",
       "ec2:DescribeVolumeStatus",
       "ec2:DescribeVolumes",
+      "ec2:DescribeTags",
       "ec2:DetachVolume",
       "iam:GetRole",
       "iam:GetRolePolicy",
@@ -185,6 +200,8 @@ data "aws_iam_policy_document" "iam_emr_service_policy" {
       "sqs:GetQueue*",
       "sqs:PurgeQueue",
       "sqs:ReceiveMessage",
+      "emr:*"
+
     ]
 
     resources = ["*"]
@@ -249,7 +266,9 @@ data "aws_iam_policy_document" "iam_emr_profile_policy" {
       "sdb:*",
       "sns:*",
       "sqs:*",
-      "glue:*"
+      "glue:*",
+      "kms:*"
+
     ]
 
     resources = ["*"]
@@ -261,7 +280,3 @@ resource "aws_iam_role_policy" "iam_emr_profile_policy" {
   role   = aws_iam_role.iam_emr_profile_role.id
   policy = data.aws_iam_policy_document.iam_emr_profile_policy.json
 }
-
-#resource "aws_s3_bucket" "imdb_data_delta_lake" {
-#  bucket = "imdb_data_delta_lake_11"
-#}
