@@ -2,19 +2,17 @@ from datetime import timedelta
 from airflow.models import Variable
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator, BranchPythonOperator
 from airflow.providers.amazon.aws.operators.emr import EmrCreateJobFlowOperator, EmrAddStepsOperator
 from airflow.providers.amazon.aws.sensors.emr import EmrStepSensor
 from airflow.utils.dates import days_ago
-from airflow.utils.trigger_rule import TriggerRule
 
-table_name = 'links_small'
-postgresurl = Variable.get('postgres_url')  #Variable.get('postgresurl')
-username = 'postgres'#Variable.get('postgres_username')
-password = 'postgres'#Variable.get('postgres_password')
-# aws_access_key_id = Variable.get('aws_access_key_id')
-# aws_secret_access_key = Variable.get('aws_secret_access_key')
+table_name = '<>'
+postgresurl = Variable.get('postgres_url')
+username = Variable.get('postgres_username')
+password = Variable.get('postgres_password')
 s3_bucket = Variable.get('s3_bucket')
+cluster_id = '<>'
+
 
 default_args = {
     "owner": "Tomiwa",
@@ -51,7 +49,7 @@ dag = DAG(
     schedule_interval=schedule_interval,
     start_date=days_ago(1),
     catchup=False,
-    tags=tags #,render_template_as_native_obj=True
+    tags=tags
 )
 
 # def _get_cluster_id(ti):
@@ -79,7 +77,7 @@ check = EmptyOperator(task_id= "check", dag=dag)
 
 step_adder_existing_cluster = EmrAddStepsOperator(
     task_id="step_adder_existing_cluster",
-    job_flow_id= 'j-2P7PBDYWGFLPV',
+    job_flow_id= cluster_id,
     aws_conn_id="aws-conn",
     steps=SPARK_STEPS
 )
@@ -93,7 +91,7 @@ step_adder_existing_cluster = EmrAddStepsOperator(
 
 job_complete_existing_cluster = EmrStepSensor(
     task_id='job_complete_existing_cluster',
-    job_flow_id= 'j-2P7PBDYWGFLPV',
+    job_flow_id= cluster_id,
     step_id= "{{ task_instance.xcom_pull(task_ids = 'step_adder_existing_cluster', key='return_value')["
     + '0' + "] }}",
     aws_conn_id='aws-conn'

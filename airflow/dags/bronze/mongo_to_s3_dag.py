@@ -2,17 +2,16 @@ from datetime import timedelta
 from airflow.models import Variable
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator, BranchPythonOperator
-from airflow.providers.amazon.aws.operators.emr import EmrCreateJobFlowOperator, EmrAddStepsOperator
+from airflow.providers.amazon.aws.operators.emr import EmrAddStepsOperator
 from airflow.providers.amazon.aws.sensors.emr import EmrStepSensor, EmrJobFlowSensor
-from airflow.utils.trigger_rule import TriggerRule
 from airflow.utils.dates import days_ago
 # from dags.check_for_cluster import check_cluster
 
 mongouri = Variable.get('mongouri')
-database = 'movies'
-collection = 'transaction'
+database = '<>'
+collection = '<>'
 s3_bucket = Variable.get('s3_bucket')
+cluster_id = '<>'
 
 print(mongouri)
 
@@ -67,7 +66,7 @@ check = EmptyOperator(task_id= "check", dag=dag)
 
 step_adder_existing_cluster = EmrAddStepsOperator(
     task_id="step_adder_existing_cluster",
-    job_flow_id= 'j-2P7PBDYWGFLPV',
+    job_flow_id= cluster_id,
     aws_conn_id="aws-conn",
     steps=SPARK_STEPS
 )
@@ -75,7 +74,7 @@ step_adder_existing_cluster = EmrAddStepsOperator(
 
 job_complete_existing_cluster = EmrStepSensor(
     task_id= 'job_complete_existing_cluster',
-    job_flow_id= 'j-2P7PBDYWGFLPV',
+    job_flow_id= cluster_id,
     step_id= "{{ task_instance.xcom_pull(task_ids = 'step_adder_existing_cluster', key='return_value')["
     + '0' + "] }}",
     aws_conn_id='aws-conn'
@@ -83,7 +82,7 @@ job_complete_existing_cluster = EmrStepSensor(
 
 
 
-check_job_flow = EmrJobFlowSensor(task_id="check_job_flow", job_flow_id= "j-PWQS676CIF9L" )
+check_job_flow = EmrJobFlowSensor(task_id="check_job_flow", job_flow_id= cluster_id )
 
 
 
